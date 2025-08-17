@@ -5,26 +5,31 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
 
     <title>Deniz Astrology — Readings & insights aligned to your journey.</title>
-    <meta name="description" content="Astrology readings and short‑form insights by Deniz. Watch YouTube Shorts, Instagram Reels, TikTok videos, and follow updates on X." />
-    <meta name="robots" content="index,follow" />
+    <meta name="description" content="Book a $49 tarot reading with Deniz Astrology and get short-form insights on YouTube, Instagram, TikTok, and X." />
+    <meta name="robots" content="index,follow,max-image-preview:large" />
     <meta name="color-scheme" content="dark light" />
     <meta name="theme-color" content="#0b0b10" media="(prefers-color-scheme: dark)" />
     <meta name="author" content="Deniz Astrology" />
 
-    <!-- Favicon -->
-    <link rel="icon" href="/astro.ico" type="image/x-icon" sizes="any" />
-
     <!-- Canonical -->
     <link rel="canonical" href="https://denizastrology.com/" />
 
+    <!-- Favicon -->
+    <link rel="icon" href="/astro.ico" type="image/x-icon" sizes="any" />
+
+    <!-- Preconnects -->
+    <link rel="preconnect" href="https://assets.calendly.com" />
+    <link rel="dns-prefetch" href="https://assets.calendly.com" />
+
     <!-- Open Graph -->
+    <meta property="og:locale" content="en_US" />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Deniz Astrology" />
     <meta property="og:title" content="Deniz Astrology — Readings & insights aligned to your journey." />
-    <meta property="og:description" content="Astrology readings and short‑form insights by Deniz. Watch YouTube Shorts, Instagram Reels, TikTok videos, and follow updates on X." />
+    <meta property="og:description" content="Book a $49 tarot reading with Deniz Astrology and get short-form insights on YouTube, Instagram, TikTok, and X." />
     <meta property="og:url" content="https://denizastrology.com/" />
     <meta property="og:image" content="https://denizastrology.com/og.jpg" />
-    <meta property="og:image:alt" content="Deniz Astrology — hero image" />
+    <meta property="og:image:alt" content="Deniz Astrology — cover image" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
 
@@ -32,7 +37,7 @@
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:site" content="@deniz_astrology" />
     <meta name="twitter:title" content="Deniz Astrology — Readings & insights aligned to your journey." />
-    <meta name="twitter:description" content="Astrology readings and short‑form insights by Deniz." />
+    <meta name="twitter:description" content="Book a $49 tarot reading with Deniz Astrology." />
     <meta name="twitter:image" content="https://denizastrology.com/og.jpg" />
 
     <!-- Profile verification / discovery -->
@@ -40,20 +45,52 @@
 
     <!-- Structured Data -->
     <script type="application/ld+json">
-      {
-        "@context": "https://schema.org",
-        "@type": "Person",
-        "@id": "https://denizastrology.com/#person",
-        "name": "Deniz Astrology",
-        "url": "https://denizastrology.com/",
-        "image": "https://denizastrology.com/og.jpg",
-        "sameAs": [
-          "https://www.youtube.com/@deniz_astrology/shorts",
-          "https://www.instagram.com/deniz_astrology/reels/",
-          "https://www.tiktok.com/@deniz_astrology",
-          "https://x.com/deniz_astrology"
-        ]
-      }
+      [
+        {
+          "@context": "https://schema.org",
+          "@type": "Person",
+          "@id": "https://denizastrology.com/#person",
+          "name": "Deniz Astrology",
+          "url": "https://denizastrology.com/",
+          "image": "https://denizastrology.com/og.jpg",
+          "sameAs": [
+            "https://www.youtube.com/@deniz_astrology/shorts",
+            "https://www.instagram.com/deniz_astrology/reels/",
+            "https://www.tiktok.com/@deniz_astrology",
+            "https://x.com/deniz_astrology"
+          ]
+        },
+        {
+          "@context": "https://schema.org",
+          "@type": "Service",
+          "@id": "https://denizastrology.com/#tarot-reading",
+          "name": "Personal Tarot Reading",
+          "description": "One-on-one tarot reading with Deniz Astrology.",
+          "provider": { "@id": "https://denizastrology.com/#person" },
+          "areaServed": "Worldwide",
+          "offers": {
+            "@type": "Offer",
+            "price": "49",
+            "priceCurrency": "USD",
+            "availability": "https://schema.org/InStock",
+            "url": "https://calendly.com/deniz-secretaryai/tarot-reading"
+          },
+          "potentialAction": {
+            "@type": "ScheduleAction",
+            "target": "https://calendly.com/deniz-secretaryai/tarot-reading"
+          }
+        },
+        {
+          "@context": "https://schema.org",
+          "@type": "WebPage",
+          "@id": "https://denizastrology.com/#webpage",
+          "url": "https://denizastrology.com/",
+          "name": "Deniz Astrology",
+          "isPartOf": { "@type": "WebSite", "url": "https://denizastrology.com/" },
+          "about": { "@id": "https://denizastrology.com/#person" },
+          "primaryImageOfPage": "https://denizastrology.com/og.png"
+        }
+      ]
     </script>
   </head>
   <body>
