@@ -277,7 +277,6 @@
       grid-template-columns: repeat(4, var(--tile-size));
       justify-content: center;
       gap: clamp(14px, 2.2vw, 22px);
-      padding: 50px;
     }
     .cta { inline-size: min(720px, 80%); } /* look tighter on large screens too */
     .tile {
