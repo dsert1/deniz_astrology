@@ -12,9 +12,9 @@
   // Links
   type Link = { href: string; label: string; icon: 'youtube' | 'instagram' | 'tiktok' | 'x' };
   const links: Link[] = [
-    { href: 'https://www.youtube.com/@deniz_astrology/shorts', label: 'YouTube Shorts', icon: 'youtube' },
     { href: 'https://www.instagram.com/deniz_astrology/reels/', label: 'Instagram Reels', icon: 'instagram' },
     { href: 'https://www.tiktok.com/@deniz_astrology', label: 'TikTok Videos', icon: 'tiktok' },
+    { href: 'https://www.youtube.com/@deniz_astrology/shorts', label: 'YouTube Shorts', icon: 'youtube' },
     { href: 'https://x.com/deniz_astrology', label: 'X', icon: 'x' }
   ];
 
