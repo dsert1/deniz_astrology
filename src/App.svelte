@@ -24,12 +24,21 @@
   const year = new Date().getFullYear();
 
   // --- Analytics (PostHog) ---
-  const PH_KEY = import.meta.env.PUBLIC_POSTHOG_KEY as string | undefined;
-  const PH_HOST = (import.meta.env.PUBLIC_POSTHOG_HOST as string | undefined) ?? 'https://us.i.posthog.com';
+  // Support both prefixes to avoid config mismatches
+  const PH_KEY =
+    (import.meta.env.VITE_POSTHOG_KEY as string | undefined) ??
+    (import.meta.env.PUBLIC_POSTHOG_KEY as string | undefined);
+
+  const PH_HOST =
+    (import.meta.env.VITE_POSTHOG_HOST as string | undefined) ??
+    (import.meta.env.PUBLIC_POSTHOG_HOST as string | undefined) ??
+    'https://us.i.posthog.com';
+
+  // HMR-safe guard so we don't double init during Vite dev reloads
+  const PH_FLAG = '__deniz_ph_inited__';
 
   async function identifyVisitor() {
-    // Distinct ID is created by PostHog; we use it as the Person's ID
-    const did = posthog?.get_distinct_id();
+    const did = posthog.get_distinct_id();
 
     const baseProps = {
       source: 'denizastrology.com',
@@ -38,7 +47,7 @@
     };
     const onceProps = { first_visit_at: new Date().toISOString() };
 
-    // Best-effort IP capture (stored as a Person property 'ip')
+    // Best-effort IP capture (stored as person property "ip")
     try {
       const res = await fetch('https://api.ipify.org?format=json', { cache: 'no-store' });
       if (res.ok) {
@@ -47,28 +56,36 @@
         return;
       }
     } catch {
-      // ignore network errors and fall back
+      // ignore
     }
-
-    // Fallback identify without explicit IP (PostHog will still add geo from server IP)
     posthog.identify(did, baseProps, onceProps);
   }
 
   onMount(() => {
-    posthog?.init(PH_KEY!, {
-      api_host: PH_HOST,
-      capture_pageview: false,   // we'll send it manually
-      capture_pageleave: true,
-      persistence: 'localStorage+cookie',
-      autocapture: true,
-      respect_dnt: true,
-      // cookie_domain: location.hostname.endsWith('denizastrology.com')
-      //   ? '.denizastrology.com'
-      //   : location.hostname,
-      loaded: (ph) => {
-        ph.capture('$pageview', { $current_url: location.href });
-      }
-    });
+    if (!PH_KEY) {
+      console.warn('[posthog] No API key found in env. Set VITE_POSTHOG_KEY or PUBLIC_POSTHOG_KEY.');
+      return;
+    }
+
+    // Only init once per page lifecycle (helps during Vite HMR)
+    if (!(window as any)[PH_FLAG]) {
+      (window as any)[PH_FLAG] = true;
+
+      posthog.init(PH_KEY, {
+        api_host: PH_HOST,
+        // We'll send our own pageview below to be explicit
+        capture_pageview: false,
+        capture_pageleave: true,
+        persistence: 'localStorage+cookie',
+        autocapture: true,
+        // Respect DNT in prod; ignore in dev so you can test locally
+        respect_dnt: false,
+        debug: import.meta.env.DEV
+      });
+    }
+
+    // Queue-safe: PostHog buffers until it’s ready
+    posthog.capture('$pageview', { $current_url: location.href });
 
     // Create/merge a Person and attach IP + basic props
     identifyVisitor();
@@ -83,7 +100,7 @@
         try {
           const u = new URL(a.href, location.href);
           if (u.host !== location.host) {
-            posthog?.capture('outbound_click', { href: u.href });
+            posthog.capture('outbound_click', { href: u.href });
           }
         } catch {}
       },
@@ -92,7 +109,7 @@
   });
 
   function trackClick(item: Link) {
-    posthog?.capture('social_tile_click', { network: item.icon, href: item.href });
+    posthog.capture('social_tile_click', { network: item.icon, href: item.href });
   }
 </script>
 
