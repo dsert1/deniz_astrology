@@ -21,29 +21,37 @@
     <link rel="preconnect" href="https://assets.calendly.com" />
     <link rel="dns-prefetch" href="https://assets.calendly.com" />
 
-    <!-- Open Graph -->
+    <!-- Optional hint (some scrapers look at this) -->
+    <link rel="image_src" href="https://denizastrology.com/og.png" />
+
+    <!-- Open Graph (used by Instagram / Facebook / WhatsApp, etc.) -->
     <meta property="og:locale" content="en_US" />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Deniz Astrology" />
     <meta property="og:title" content="Deniz Astrology — Readings & insights aligned to your journey." />
     <meta property="og:description" content="Book a $49 tarot reading with Deniz Astrology and get short-form insights on YouTube, Instagram, TikTok, and X." />
     <meta property="og:url" content="https://denizastrology.com/" />
-    <meta property="og:image" content="https://denizastrology.com/og.jpg" />
-    <meta property="og:image:alt" content="Deniz Astrology — cover image" />
-    <meta property="og:image:width" content="1200" />
-    <meta property="og:image:height" content="630" />
+    <!-- USE HERO.PNG HERE -->
+    <meta property="og:image" content="https://denizastrology.com/og.png" />
+    <meta property="og:image:secure_url" content="https://denizastrology.com/og.png" />
+    <meta property="og:image:type" content="image/png" />
+    <!-- If you know the actual dimensions, set them; otherwise you can omit -->
+    <!-- <meta property="og:image:width" content="1024" />
+    <meta property="og:image:height" content="1024" /> -->
+    <meta property="og:image:alt" content="Deniz Astrology — avatar" />
 
     <!-- Twitter / X -->
-    <meta name="twitter:card" content="summary_large_image" />
+    <!-- For a square hero, 'summary' avoids awkward cropping; use 'summary_large_image' for 1200×630 banners -->
+    <meta name="twitter:card" content="summary" />
     <meta name="twitter:site" content="@deniz_astrology" />
     <meta name="twitter:title" content="Deniz Astrology — Readings & insights aligned to your journey." />
     <meta name="twitter:description" content="Book a $49 tarot reading with Deniz Astrology." />
-    <meta name="twitter:image" content="https://denizastrology.com/og.jpg" />
+    <meta name="twitter:image" content="https://denizastrology.com/og.png" />
 
     <!-- Profile verification / discovery -->
     <link rel="me" href="https://x.com/deniz_astrology" />
 
-    <!-- Structured Data -->
+    <!-- Structured Data (image refs updated to hero.png for consistency) -->
     <script type="application/ld+json">
       [
         {
@@ -52,7 +60,7 @@
           "@id": "https://denizastrology.com/#person",
           "name": "Deniz Astrology",
           "url": "https://denizastrology.com/",
-          "image": "https://denizastrology.com/og.jpg",
+          "image": "https://denizastrology.com/og.png",
           "sameAs": [
             "https://www.youtube.com/@deniz_astrology/shorts",
             "https://www.instagram.com/deniz_astrology/reels/",
@@ -88,7 +96,10 @@
           "name": "Deniz Astrology",
           "isPartOf": { "@type": "WebSite", "url": "https://denizastrology.com/" },
           "about": { "@id": "https://denizastrology.com/#person" },
-          "primaryImageOfPage": "https://denizastrology.com/og.png"
+          "primaryImageOfPage": {
+            "@type": "ImageObject",
+            "url": "https://denizastrology.com/og.png"
+          }
         }
       ]
     </script>

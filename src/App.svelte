@@ -71,6 +71,9 @@
   function trackClick(item: Link) {
     posthog.capture('social_tile_click', { network: item.icon, href: item.href });
   }
+  function trackHandleClick(href: string) {
+    posthog.capture('follow_handle_click', { href });
+  }
 
   // Booking CTA (new tab)
   const calendlyUrl =
@@ -85,6 +88,20 @@
     <div class="brand">
       <h1>Deniz Astrology</h1>
       <p class="subtitle">Readings & insights aligned to your journey.</p>
+
+      <!-- NEW: universal handle line -->
+      <p class="handle-line">
+        Follow
+        <a
+          class="handle-link"
+          href="https://instagram.com/deniz_astrology"
+          target="_blank"
+          rel="noopener noreferrer"
+          onclick={() => trackHandleClick('https://x.com/deniz_astrology')}
+        >
+          @deniz_astrology
+        </a>
+      </p>
     </div>
   </header>
 
@@ -192,6 +209,25 @@
 
   h1 { font-size: clamp(28px, 6vw, 40px); line-height: 1.1; margin: 0 0 6px; font-weight: 700; }
   .subtitle { margin: 0; color: var(--muted); font-size: clamp(13px, 3.5vw, 16px); }
+
+  /* NEW: handle line styles */
+  .handle-line {
+    margin: 6px 0 0;
+    font-size: clamp(13px, 3.3vw, 15px);
+    color: var(--muted);
+  }
+  .handle-link {
+    color: var(--accent);
+    font-weight: 700;
+    text-decoration: underline;
+    text-decoration-color: rgba(164,147,255,0.45);
+    text-underline-offset: 3px;
+  }
+  .handle-link:hover,
+  .handle-link:focus-visible {
+    text-decoration-color: currentColor;
+    outline: none;
+  }
 
   .hero {
     display: grid;
