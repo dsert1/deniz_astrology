@@ -1,4 +1,7 @@
-<script>
+<script lang="ts">
+  import { onMount } from 'svelte';
+  import posthog from 'posthog-js';
+
   // Assets
   import hero from './assets/hero/hero.jpg';
   import iconYoutube from './assets/logos/youtube.svg?url';
@@ -7,38 +10,90 @@
   import iconX from './assets/logos/x.svg?url';
 
   // Links
-  const links = [
-    {
-      href: 'https://www.youtube.com/@deniz_astrology/shorts',
-      label: 'YouTube Shorts',
-      icon: 'youtube'
-    },
-    {
-      href: 'https://www.instagram.com/deniz_astrology/reels/',
-      label: 'Instagram Reels',
-      icon: 'instagram'
-    },
-    {
-      href: 'https://www.tiktok.com/@deniz_astrology',
-      label: 'TikTok Videos',
-      icon: 'tiktok'
-    },
-    {
-      href: 'https://x.com/deniz_astrology',
-      label: 'X',
-      icon: 'x'
-    }
+  type Link = { href: string; label: string; icon: 'youtube' | 'instagram' | 'tiktok' | 'x' };
+  const links: Link[] = [
+    { href: 'https://www.youtube.com/@deniz_astrology/shorts', label: 'YouTube Shorts', icon: 'youtube' },
+    { href: 'https://www.instagram.com/deniz_astrology/reels/', label: 'Instagram Reels', icon: 'instagram' },
+    { href: 'https://www.tiktok.com/@deniz_astrology', label: 'TikTok Videos', icon: 'tiktok' },
+    { href: 'https://x.com/deniz_astrology', label: 'X', icon: 'x' }
   ];
 
   // Map logical icon -> asset URL
-  const iconMap = {
-    youtube: iconYoutube,
-    instagram: iconInstagram,
-    tiktok: iconTiktok,
-    x: iconX
-  };
+  const iconMap = { youtube: iconYoutube, instagram: iconInstagram, tiktok: iconTiktok, x: iconX };
 
   const year = new Date().getFullYear();
+
+  // --- Analytics (PostHog) ---
+  const PH_KEY = import.meta.env.PUBLIC_POSTHOG_KEY as string | undefined;
+  const PH_HOST = (import.meta.env.PUBLIC_POSTHOG_HOST as string | undefined) ?? 'https://us.i.posthog.com';
+
+  async function identifyVisitor() {
+    // Distinct ID is created by PostHog; we use it as the Person's ID
+    const did = posthog?.get_distinct_id();
+
+    const baseProps = {
+      source: 'denizastrology.com',
+      tz: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      ua: navigator.userAgent
+    };
+    const onceProps = { first_visit_at: new Date().toISOString() };
+
+    // Best-effort IP capture (stored as a Person property 'ip')
+    try {
+      const res = await fetch('https://api.ipify.org?format=json', { cache: 'no-store' });
+      if (res.ok) {
+        const data = (await res.json()) as { ip: string };
+        posthog.identify(did, { ...baseProps, ip: data.ip }, onceProps);
+        return;
+      }
+    } catch {
+      // ignore network errors and fall back
+    }
+
+    // Fallback identify without explicit IP (PostHog will still add geo from server IP)
+    posthog.identify(did, baseProps, onceProps);
+  }
+
+  onMount(() => {
+    posthog?.init(PH_KEY!, {
+      api_host: PH_HOST,
+      capture_pageview: false,   // we'll send it manually
+      capture_pageleave: true,
+      persistence: 'localStorage+cookie',
+      autocapture: true,
+      respect_dnt: true,
+      // cookie_domain: location.hostname.endsWith('denizastrology.com')
+      //   ? '.denizastrology.com'
+      //   : location.hostname,
+      loaded: (ph) => {
+        ph.capture('$pageview', { $current_url: location.href });
+      }
+    });
+
+    // Create/merge a Person and attach IP + basic props
+    identifyVisitor();
+
+    // Generic outbound click tracker
+    document.addEventListener(
+      'click',
+      (e) => {
+        const target = e.target as HTMLElement | null;
+        const a = target?.closest('a[href]') as HTMLAnchorElement | null;
+        if (!a) return;
+        try {
+          const u = new URL(a.href, location.href);
+          if (u.host !== location.host) {
+            posthog?.capture('outbound_click', { href: u.href });
+          }
+        } catch {}
+      },
+      { capture: true }
+    );
+  });
+
+  function trackClick(item: Link) {
+    posthog?.capture('social_tile_click', { network: item.icon, href: item.href });
+  }
 </script>
 
 <main class="page">
@@ -69,6 +124,7 @@
         target="_blank"
         rel="noopener noreferrer"
         aria-label={item.label}
+        onclick={() => trackClick(item)}
       >
         <img
           class="icon-img"
@@ -168,12 +224,13 @@
   }
 
   .tiles {
+    --gutter: clamp(16px, 3vw, 24px);
     width: 100%;
     max-width: var(--maxw);
-    margin: 14px auto 8px auto;
-    padding: 0 20px 6px;
+    margin: var(--gutter) auto;
+    padding: 0 var(--gutter);
     display: grid;
-    gap: 14px;
+    gap: var(--gutter);
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   }
 
@@ -181,7 +238,7 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center; /* NEW: centers content vertically */
+    justify-content: center;
     gap: 12px;
     text-decoration: none;
     color: var(--fg);
@@ -189,7 +246,7 @@
     border: 1px solid var(--tile-brd);
     border-radius: 14px;
     padding: 20px 18px;
-    min-height: 160px;        /* keeps cards the same height */
+    min-height: 160px;
     transition: transform 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
     box-shadow: 0 8px 24px rgba(0,0,0,0.35);
     will-change: transform;
@@ -212,8 +269,7 @@
     box-sizing: border-box;
   }
 
-  /* Normalize YouTube and X into rounded-square badges
-     so they match the visual weight of IG/TikTok */
+  /* Normalize YouTube and X into rounded-square badges to match IG/TikTok */
   .tile[data-icon='youtube'] .icon-img,
   .tile[data-icon='x'] .icon-img {
     padding: 12px;
@@ -225,13 +281,6 @@
     box-shadow:
       0 6px 18px rgba(0,0,0,0.35),
       inset 0 0 0 1px rgba(255,255,255,0.04);
-  }
-
-  .tile-label {
-    font-weight: 600;
-    letter-spacing: 0.2px;
-    text-align: center;
-    font-size: 18px;
   }
 
   .footer {
