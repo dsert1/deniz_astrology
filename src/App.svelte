@@ -18,13 +18,10 @@
     { href: 'https://x.com/deniz_astrology', label: 'X', icon: 'x' }
   ];
 
-  // Map logical icon -> asset URL
   const iconMap = { youtube: iconYoutube, instagram: iconInstagram, tiktok: iconTiktok, x: iconX };
-
   const year = new Date().getFullYear();
 
   // --- Analytics (PostHog) ---
-  // Support both prefixes to avoid config mismatches
   const PH_KEY =
     (import.meta.env.VITE_POSTHOG_KEY as string | undefined) ??
     (import.meta.env.PUBLIC_POSTHOG_KEY as string | undefined);
@@ -34,63 +31,46 @@
     (import.meta.env.PUBLIC_POSTHOG_HOST as string | undefined) ??
     'https://us.i.posthog.com';
 
-  // HMR-safe guard so we don't double init during Vite dev reloads
   const PH_FLAG = '__deniz_ph_inited__';
 
   async function identifyVisitor() {
     const did = posthog.get_distinct_id();
-
     const baseProps = {
       source: 'denizastrology.com',
       tz: Intl.DateTimeFormat().resolvedOptions().timeZone,
       ua: navigator.userAgent
     };
     const onceProps = { first_visit_at: new Date().toISOString() };
-
-    // Best-effort IP capture (stored as person property "ip")
     try {
       const res = await fetch('https://api.ipify.org?format=json', { cache: 'no-store' });
       if (res.ok) {
-        const data = (await res.json()) as { ip: string };
-        posthog.identify(did, { ...baseProps, ip: data.ip }, onceProps);
+        const { ip } = (await res.json()) as { ip: string };
+        posthog.identify(did, { ...baseProps, ip }, onceProps);
         return;
       }
-    } catch {
-      // ignore
-    }
+    } catch {}
     posthog.identify(did, baseProps, onceProps);
   }
 
   onMount(() => {
-    if (!PH_KEY) {
-      console.warn('[posthog] No API key found in env. Set VITE_POSTHOG_KEY or PUBLIC_POSTHOG_KEY.');
-      return;
-    }
+    if (!PH_KEY) return;
 
-    // Only init once per page lifecycle (helps during Vite HMR)
     if (!(window as any)[PH_FLAG]) {
       (window as any)[PH_FLAG] = true;
-
       posthog.init(PH_KEY, {
         api_host: PH_HOST,
-        // We'll send our own pageview below to be explicit
         capture_pageview: false,
         capture_pageleave: true,
         persistence: 'localStorage+cookie',
         autocapture: true,
-        // Respect DNT in prod; ignore in dev so you can test locally
-        respect_dnt: false,
+        respect_dnt: false, // keep false while testing; set true for production if needed
         debug: import.meta.env.DEV
       });
     }
 
-    // Queue-safe: PostHog buffers until it’s ready
     posthog.capture('$pageview', { $current_url: location.href });
-
-    // Create/merge a Person and attach IP + basic props
     identifyVisitor();
 
-    // Generic outbound click tracker
     document.addEventListener(
       'click',
       (e) => {
@@ -99,9 +79,7 @@
         if (!a) return;
         try {
           const u = new URL(a.href, location.href);
-          if (u.host !== location.host) {
-            posthog.capture('outbound_click', { href: u.href });
-          }
+          if (u.host !== location.host) posthog.capture('outbound_click', { href: u.href });
         } catch {}
       },
       { capture: true }
@@ -141,15 +119,13 @@
         target="_blank"
         rel="noopener noreferrer"
         aria-label={item.label}
-        onclick={() => trackClick(item)}
+        on:click={() => trackClick(item)}
       >
         <img
           class="icon-img"
           src={iconMap[item.icon]}
           alt=""
           aria-hidden="true"
-          width="84"
-          height="84"
         />
       </a>
     {/each}
@@ -175,7 +151,7 @@
     -moz-osx-font-smoothing: grayscale;
   }
 
-  /* Theme */
+  /* Theme + safe-area support */
   :root {
     --bg: #0b0b10;
     --fg: #f5f6fb;
@@ -185,13 +161,20 @@
     --tile-brd: rgba(255,255,255,0.09);
     --ring: rgba(164,147,255,0.28);
     --maxw: 1000px;
+
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-right: env(safe-area-inset-right, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+    --safe-left: env(safe-area-inset-left, 0px);
   }
 
   .page {
     min-height: 100%;
     display: grid;
     grid-template-rows: auto auto 1fr auto;
-    gap: 28px;
+    gap: clamp(16px, 4vw, 28px);
+    padding-left: var(--safe-left);
+    padding-right: var(--safe-right);
   }
 
   .site-header {
@@ -199,17 +182,18 @@
     justify-content: center;
     border-bottom: 1px solid rgba(255,255,255,0.06);
     background: linear-gradient(0deg, rgba(255,255,255,0.02), rgba(255,255,255,0.02));
+    padding-top: var(--safe-top);
     backdrop-filter: blur(6px);
   }
 
   .brand {
     width: 100%;
     max-width: var(--maxw);
-    padding: 20px 20px 16px;
+    padding: clamp(12px, 3.5vw, 20px) clamp(16px, 5vw, 24px) 12px;
   }
 
   h1 {
-    font-size: clamp(28px, 4vw, 40px);
+    font-size: clamp(28px, 6vw, 40px);
     line-height: 1.1;
     margin: 0 0 6px 0;
     font-weight: 700;
@@ -219,54 +203,62 @@
   .subtitle {
     margin: 0;
     color: var(--muted);
-    font-size: clamp(14px, 1.8vw, 16px);
+    font-size: clamp(13px, 3.5vw, 16px);
   }
 
   .hero {
     display: grid;
     place-items: center;
-    padding: 10px 20px 0 20px;
+    padding: 8px clamp(16px, 5vw, 24px) 0;
   }
 
-  /* Smaller, natural-ratio hero */
+  /* Mobile-first hero, scales smoothly */
   .selfie {
-    width: clamp(180px, 46vw, 200px);
+    width: clamp(220px, 62vw, 340px);
     height: auto;
     aspect-ratio: auto;
-    border-radius: 16px;
+    border-radius: 14px;
     border: 1px solid rgba(255,255,255,0.08);
     box-shadow:
-      0 16px 40px rgba(0,0,0,0.40),
+      0 14px 32px rgba(0,0,0,0.40),
       0 0 0 4px var(--ring);
   }
 
   .tiles {
-    --gutter: clamp(16px, 3vw, 24px);
+    --gutter: clamp(12px, 4.5vw, 20px);
     width: 100%;
     max-width: var(--maxw);
     margin: var(--gutter) auto;
     padding: 0 var(--gutter);
     display: grid;
     gap: var(--gutter);
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    grid-template-columns: 1fr; /* phones */
+  }
+
+  /* small tablets */
+  @media (min-width: 520px) {
+    .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+
+  /* desktops */
+  @media (min-width: 900px) {
+    .tiles { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   }
 
   .tile {
     display: flex;
-    flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 12px;
     text-decoration: none;
     color: var(--fg);
     background: var(--tile-bg);
     border: 1px solid var(--tile-brd);
     border-radius: 14px;
-    padding: 20px 18px;
-    min-height: 160px;
+    padding: clamp(14px, 3.5vw, 20px);
+    min-height: clamp(120px, 28vw, 160px); /* ≥48px tap target */
     transition: transform 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
     box-shadow: 0 8px 24px rgba(0,0,0,0.35);
-    will-change: transform;
+    touch-action: manipulation;
   }
 
   .tile:hover,
@@ -277,20 +269,20 @@
     outline: none;
   }
 
-  /* Consistent icon box */
+  /* Icon scales with viewport; no hardcoded width/height */
   .icon-img {
-    width: 84px;
-    height: 84px;
+    width: clamp(56px, 12vw, 84px);
+    height: clamp(56px, 12vw, 84px);
     object-fit: contain;
     display: block;
     box-sizing: border-box;
   }
 
-  /* Normalize YouTube and X into rounded-square badges to match IG/TikTok */
+  /* Normalize YouTube and X into rounded-square badges */
   .tile[data-icon='youtube'] .icon-img,
   .tile[data-icon='x'] .icon-img {
-    padding: 12px;
-    border-radius: 18px;
+    padding: clamp(8px, 2.2vw, 12px);
+    border-radius: clamp(12px, 3vw, 18px);
     background:
       linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02))
       #0f0f16;
@@ -303,13 +295,13 @@
   .footer {
     display: grid;
     place-items: center;
-    padding: 22px 0 30px;
+    padding: 22px 0 calc(30px + var(--safe-bottom));
     color: var(--muted);
   }
 
-  @media (min-width: 900px) {
-    .brand { padding-left: 24px; padding-right: 24px; }
-    .tiles { gap: 16px; }
-    .tile { padding: 22px 20px; }
+  /* Reduce motion for users who prefer it */
+  @media (prefers-reduced-motion: reduce) {
+    .tile { transition: none; }
+    .tile:hover { transform: none; }
   }
 </style>
