@@ -34,6 +34,32 @@
     'https://us.i.posthog.com';
   const PH_FLAG = '__deniz_ph_inited__';
 
+  function ensureFBPixel() {
+    if (typeof window === 'undefined') return;
+    if ((window as any).__fbq_inited__) return;
+
+    // Meta Pixel base loader (same as your snippet, inlined here)
+    void (function (f: any, b: Document, e: string, v: string, n?: any, t?: any, s?: any) {
+      if ((f as any).fbq) return;
+      n = (f as any).fbq = function () {
+        (n as any).callMethod ? (n as any).callMethod.apply(n, arguments) : (n as any).queue.push(arguments);
+      };
+      if (!(f as any)._fbq) (f as any)._fbq = n;
+      (n as any).push = n;
+      (n as any).loaded = true;
+      (n as any).version = '2.0';
+      (n as any).queue = [];
+      t = (b as any).createElement(e) as any;
+      (t as any).async = true;
+      (t as any).src = v;
+      s = (b as any).getElementsByTagName(e)[0] as HTMLElement;
+      (s as any).parentNode?.insertBefore(t, s);
+    })(window, document, 'script', 'https://connect.facebook.net/en_US/fbevents.js');
+
+    (window as any).fbq && (window as any).fbq('init', import.meta.env.PUBLIC_FB_PIXEL_ID);
+    (window as any).__fbq_inited__ = true;
+  }
+
   async function identifyVisitor() {
     const did = posthog.get_distinct_id();
     const baseProps = { source: 'denizastrology.com', tz: Intl.DateTimeFormat().resolvedOptions().timeZone, ua: navigator.userAgent };
@@ -79,6 +105,8 @@
     'https://calendly.com/deniz-secretaryai/tarot-reading?hide_event_type_details=1&hide_gdpr_banner=1&primary_color=a493ff';
   function trackBook() {
     posthog.capture('book_cta_click', { price: 49, currency: 'USD', method: 'calendly_stripe' });
+    ensureFBPixel();
+    (window as any).fbq && (window as any).fbq('track', 'InitiateCheckout');
   }
 </script>
 
