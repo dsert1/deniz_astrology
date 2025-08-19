@@ -24,6 +24,16 @@
   const iconMap = { youtube: iconYoutube, instagram: iconInstagram, tiktok: iconTiktok, snap: iconSnap, x: iconX };
   const year = new Date().getFullYear();
 
+  // Single “product” your CTA sells
+  const PRODUCT = {
+    id: 'tarot-reading-49',      // <- any stable string id you choose
+    name: 'Personal Tarot Reading',
+    category: 'Tarot',
+    price: 49,
+    currency: 'USD'
+  } as const;
+
+
   // ----- Analytics (PostHog) -----
   const PH_KEY =
     (import.meta.env.VITE_POSTHOG_KEY as string | undefined) ??
@@ -105,25 +115,25 @@
   }
 
   async function identifyVisitor() {
-    const did = posthog.get_distinct_id();
+    const did = posthog?.get_distinct_id();
     const baseProps = { source: 'denizastrology.com', tz: Intl.DateTimeFormat().resolvedOptions().timeZone, ua: navigator.userAgent };
     const onceProps = { first_visit_at: new Date().toISOString() };
     try {
       const res = await fetch('https://api.ipify.org?format=json', { cache: 'no-store' });
       if (res.ok) {
         const { ip } = (await res.json()) as { ip: string };
-        posthog.identify(did, { ...baseProps, ip }, onceProps);
+        posthog?.identify(did, { ...baseProps, ip }, onceProps);
         return;
       }
     } catch {}
-    posthog.identify(did, baseProps, onceProps);
+    posthog?.identify(did, baseProps, onceProps);
   }
 
   onMount(() => {
     if (!PH_KEY) return;
     if (!(window as any)[PH_FLAG]) {
       (window as any)[PH_FLAG] = true;
-      posthog.init(PH_KEY, {
+      posthog?.init(PH_KEY, {
         api_host: PH_HOST,
         capture_pageview: false,
         capture_pageleave: true,
@@ -133,31 +143,55 @@
         debug: import.meta.env.DEV
       });
     }
-    posthog.capture('$pageview', { $current_url: location.href });
+    posthog?.capture('$pageview', { $current_url: location.href });
     identifyVisitor();
   });
 
   function trackClick(item: Link) {
-    posthog.capture('social_tile_click', { network: item.icon, href: item.href });
+    posthog?.capture('social_tile_click', { network: item.icon, href: item.href });
   }
   function trackHandleClick(href: string) {
-    posthog.capture('follow_handle_click', { href });
+    posthog?.capture('follow_handle_click', { href });
   }
 
   // Booking CTA (new tab) — fire both pixels on click
   const calendlyUrl =
     'https://calendly.com/deniz-secretaryai/tarot-reading?hide_event_type_details=1&hide_gdpr_banner=1&primary_color=a493ff';
-  function trackBook() {
-    posthog.capture('book_cta_click', { price: 49, currency: 'USD', method: 'calendly_stripe' });
+    function trackBook() {
+    // PostHog
+    posthog?.capture('book_cta_click', {
+      price: PRODUCT.price,
+      currency: PRODUCT.currency,
+      method: 'calendly_stripe'
+    });
 
-    // Meta
+    // --- Meta / Facebook ---
     ensureFBPixel();
-    (window as any).fbq?.('track', 'InitiateCheckout');
+    // Send both content_ids (array) and contents (objects) for best matching
+    (window as any).fbq?.('track', 'InitiateCheckout', {
+      content_type: 'product',
+      content_name: PRODUCT.name,
+      content_category: PRODUCT.category,
+      content_ids: [PRODUCT.id],
+      contents: [{ id: PRODUCT.id, quantity: 1, item_price: PRODUCT.price }],
+      value: PRODUCT.price,
+      currency: PRODUCT.currency,
+      num_items: 1
+    });
 
-    // TikTok
+    // --- TikTok ---
     ensureTTPixel();
-    (window as any).ttq?.track('InitiateCheckout', { value: 49, currency: 'USD' });
+    // Include top-level content_id AND contents[] (TikTok’s validator often checks for content_id specifically)
+    (window as any).ttq?.track('InitiateCheckout', {
+      content_id: PRODUCT.id,
+      contents: [{ content_id: PRODUCT.id, quantity: 1, price: PRODUCT.price }],
+      content_type: 'product',
+      value: PRODUCT.price,
+      currency: PRODUCT.currency,
+      quantity: 1
+    });
   }
+
 </script>
 
 <main class="page">
