@@ -14,10 +14,10 @@
   // Links (IG, TikTok, SNAP (3rd), YouTube, X)
   type Link = { href: string; label: string; icon: 'instagram' | 'tiktok' | 'snap' | 'youtube' | 'x' };
   const links: Link[] = [
-    { href: 'https://www.instagram.com/deniz_astrology/reels/', label: 'Instagram Reels', icon: 'instagram' },
     { href: 'https://www.tiktok.com/@deniz_astrology',          label: 'TikTok Videos',   icon: 'tiktok' },
-    { href: 'https://www.snapchat.com/add/denizastrology',      label: 'Snapchat',        icon: 'snap' },
+    { href: 'https://www.instagram.com/deniz_astrology/reels/', label: 'Instagram Reels', icon: 'instagram' },
     { href: 'https://www.youtube.com/@deniz_astrology/shorts',  label: 'YouTube Shorts',  icon: 'youtube' },
+    { href: 'https://www.snapchat.com/add/denizastrology',      label: 'Snapchat',        icon: 'snap' },
     { href: 'https://x.com/deniz_astrology',                    label: 'X',               icon: 'x' }
   ];
 
