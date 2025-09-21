@@ -16,10 +16,10 @@
   const links: Link[] = [
     { href: 'https://www.tiktok.com/@deniz_astrology',          label: 'TikTok Videos',   icon: 'tiktok' },
     { href: 'https://www.instagram.com/deniz_astrology/reels/', label: 'Instagram Reels', icon: 'instagram' },
-    { href: 'https://www.youtube.com/@deniz_astrology/shorts',  label: 'YouTube Shorts',  icon: 'youtube' },           icon: 'x' }
+    { href: 'https://www.youtube.com/@deniz_astrology/shorts',  label: 'YouTube Shorts',  icon: 'youtube' },
   ];
 
-  const iconMap = { youtube: iconYoutube, instagram: iconInstagram, tiktok: iconTiktok, snap: iconSnap, x: iconX };
+  const iconMap = { youtube: iconYoutube, instagram: iconInstagram, tiktok: iconTiktok };
   const year = new Date().getFullYear();
 
   // Single “product” your CTA sells
@@ -351,13 +351,30 @@
 
   @media (min-width: 900px) {
     .brand, .hero, .cta-wrap, .tiles, .footer { width: min(100%, var(--maxw)); }
-    .tiles { grid-template-columns: repeat(4, var(--tile-size)); justify-content: center; gap: clamp(14px, 2.2vw, 22px); }
-    .cta { inline-size: min(720px, 80%); }
-    .tile { width: var(--tile-size); height: var(--tile-size); padding: clamp(10px, 1.4vw, 14px); display: grid; }
-    .icon-img { width: clamp(72px, 68%, 110px); height: clamp(72px, 68%, 110px); }
-  }
 
-  @media (min-width: 1200px) { .tiles { grid-template-columns: repeat(5, var(--tile-size)); } }
+    /* collapse unused columns and distribute evenly */
+    .tiles {
+      /* fixed-size columns that wrap; no empty tracks left behind */
+      grid-template-columns: repeat(auto-fit, minmax(0, var(--tile-size)));
+      justify-content: center;
+      gap: clamp(14px, 2.2vw, 22px);
+    }
+    .cta { inline-size: min(720px, 80%); }
+
+    /* tile fills its column up to --tile-size and stays square */
+    .tile {
+      width: var(--tile-size);
+      height: var(--tile-size);
+      padding: clamp(10px, 1.4vw, 14px);
+      display: grid;
+      place-items: center;
+    }
+
+    .icon-img {
+      width: clamp(72px, 68%, 110px);
+      height: clamp(72px, 68%, 110px);
+    }
+  }
 
   .footer { display: grid; place-items: center; padding: 12px 0 calc(12px + env(safe-area-inset-bottom, 0px)); color: var(--muted); text-align: center; }
 
