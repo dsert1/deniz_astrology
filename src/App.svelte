@@ -219,7 +219,7 @@
 
   <section class="cta-wrap" aria-label="Book a personal reading">
     <a class="cta" href={calendlyUrl} target="_blank" rel="noopener noreferrer" onclick={trackBook}>
-      Book a personal reading — $49
+      Book a personal reading — $19
     </a>
   </section>
 
